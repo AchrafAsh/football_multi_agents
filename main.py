@@ -12,7 +12,7 @@ class ContinuousCanvas(VisualizationElement):
     ]
 
     def __init__(self, canvas_height=800,
-                 canvas_width=1300, instantiate=True):
+                 canvas_width=800, instantiate=True):
         VisualizationElement.__init__(self)
         self.canvas_height = canvas_height
         self.canvas_width = canvas_width
@@ -41,6 +41,14 @@ class ContinuousCanvas(VisualizationElement):
                               (model.space.x_max - model.space.x_min))
             portrayal["y"] = ((model.ball.y - model.space.y_min) /
                               (model.space.y_max - model.space.y_min))
+            representation[portrayal["Layer"]].append(portrayal)
+        for obj in model.Goals:
+            portrayal = self.portrayal_method(obj)
+            if portrayal:
+                portrayal["x"] = ((obj.x - model.space.x_min) /
+                                  (model.space.x_max - model.space.x_min))
+                portrayal["y"] = ((obj.y - model.space.y_min) /
+                                  (model.space.y_max - model.space.y_min))
             representation[portrayal["Layer"]].append(portrayal)
         return representation
 

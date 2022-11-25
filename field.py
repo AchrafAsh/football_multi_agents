@@ -21,8 +21,8 @@ class Goal:
         portrayal = {"Shape": "circle",
                      "Filled": "true",
                      "Layer": 2,
-                     "Color": "red",
-                     "r": 2}
+                     "Color": "black",
+                     "r": 10}
         return portrayal
 
 
@@ -35,18 +35,28 @@ class Field(Model):
         }, agent_reporters={})
 
     def __init__(self, n_players, speed):
-        width, height = 1300, 800
+        width, height = 800, 800
         Model.__init__(self)
         self.space = mesa.space.ContinuousSpace(width, height, False)
         self.steps = 0
         self.ball = Ball(width/2, height/2)
+        self.Goals = []
         self.schedule = RandomActivation(self)
 
         for _ in range(n_players):  # Loop on teams
-            x, y = random.random() * width, random.random() * height
+            x, y = random.random() * width / 2, random.random() * height
             self.schedule.add(
-                Player(int(uuid.uuid1()), self, x, y, speed,
-                      2 * speed, random.random() * 2 * math.pi))
+                Player(int(uuid.uuid1()), self, x, y, speed, 1, random.random() * 2 * math.pi))
+        for _ in range(n_players):  # Loop on teams
+            x, y = (random.random() + 1) * width / 2, random.random() * height
+            self.schedule.add(
+                Player(int(uuid.uuid1()), self, x, y, speed, 2, random.random() * 2 * math.pi))
+
+        self.Goals.append(Goal(0, height / 2 - 100))
+        self.Goals.append(Goal(0, height / 2 + 100))
+        self.Goals.append(Goal(width, height / 2 - 100))
+        self.Goals.append(Goal(width, height / 2 + 100))
+
         self.datacollector = self.collector
 
     def step(self):
