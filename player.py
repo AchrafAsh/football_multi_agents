@@ -1,9 +1,11 @@
 import mesa
 import mesa.space
-from utils import distance
+
+
+# from utils import distance
 
 class Player(mesa.Agent):
-    def __init__(self, unique_id: int, model: mesa.Model, x, y, speed, sight_distance, team_color:str, angle=0.0):
+    def __init__(self, unique_id: int, model: mesa.Model, x, y, speed, sight_distance, team_color: str, angle=0.0):
         super().__init__(unique_id, model)
         self.team_color = team_color
         self.x = x
@@ -19,7 +21,7 @@ class Player(mesa.Agent):
         }
 
     def step(self):
-       pass
+        pass
 
     def portrayal_method(self):
         portrayal = {"Shape": "arrowHead", "s": 1, "Filled": "true", "Color": "Red", "Layer": 3, 'x': self.x,

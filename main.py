@@ -11,8 +11,8 @@ class ContinuousCanvas(VisualizationElement):
         "./js/jquery.js"
     ]
 
-    def __init__(self, canvas_height=500,
-                 canvas_width=500, instantiate=True):
+    def __init__(self, canvas_height=800,
+                 canvas_width=1300, instantiate=True):
         VisualizationElement.__init__(self)
         self.canvas_height = canvas_height
         self.canvas_width = canvas_width
@@ -35,59 +35,25 @@ class ContinuousCanvas(VisualizationElement):
                 portrayal["y"] = ((obj.y - model.space.y_min) /
                                   (model.space.y_max - model.space.y_min))
             representation[portrayal["Layer"]].append(portrayal)
-        for obj in model.mines:
-            portrayal = self.portrayal_method(obj)
-            if portrayal:
-                portrayal["x"] = ((obj.x - model.space.x_min) /
-                                  (model.space.x_max - model.space.x_min))
-                portrayal["y"] = ((obj.y - model.space.y_min) /
-                                  (model.space.y_max - model.space.y_min))
-            representation[portrayal["Layer"]].append(portrayal)
-        for obj in model.markers:
-            portrayal = self.portrayal_method(obj)
-            if portrayal:
-                portrayal["x"] = ((obj.x - model.space.x_min) /
-                                  (model.space.x_max - model.space.x_min))
-                portrayal["y"] = ((obj.y - model.space.y_min) /
-                                  (model.space.y_max - model.space.y_min))
-            representation[portrayal["Layer"]].append(portrayal)
-        for obj in model.obstacles:
-            portrayal = self.portrayal_method(obj)
-            if portrayal:
-                portrayal["x"] = ((obj.x - model.space.x_min) /
-                                  (model.space.x_max - model.space.x_min))
-                portrayal["y"] = ((obj.y - model.space.y_min) /
-                                  (model.space.y_max - model.space.y_min))
-            representation[portrayal["Layer"]].append(portrayal)
-        for obj in model.quicksands:
-            portrayal = self.portrayal_method(obj)
-            if portrayal:
-                portrayal["x"] = ((obj.x - model.space.x_min) /
-                                  (model.space.x_max - model.space.x_min))
-                portrayal["y"] = ((obj.y - model.space.y_min) /
-                                  (model.space.y_max - model.space.y_min))
+        portrayal = self.portrayal_method(model.ball)
+        if portrayal:
+            portrayal["x"] = ((model.ball.x - model.space.x_min) /
+                              (model.space.x_max - model.space.x_min))
+            portrayal["y"] = ((model.ball.y - model.space.y_min) /
+                              (model.space.y_max - model.space.y_min))
             representation[portrayal["Layer"]].append(portrayal)
         return representation
 
 
 def run_single_server():
-    chart = ChartModule([{"Label": "Mines",
-                          "Color": "Orange"},
-                         {"Label": "Danger markers",
-                          "Color": "Red"},
-                         {"Label": "Indication markers",
-                          "Color": "Green"}
-                         ],
+    chart = ChartModule([{"Label": "Shoots",
+                          "Color": "Orange"}],
                         data_collector_name='datacollector')
     server = ModularServer(Field,
                            [ContinuousCanvas(), chart],
-                           "Deminer robots",
-                           {"n_robots": UserSettableParameter('slider', "Number of robots", 7, 3,
-                                                             15, 1),
-                            "n_obstacles": UserSettableParameter('slider', "Number of obstacles", 5, 2, 10, 1),
-                            "n_quicksand": UserSettableParameter('slider', "Number of quicksand", 5, 2, 10, 1),
-                            "speed": UserSettableParameter('slider', "Robot speed", 15, 5, 40, 5),
-                            "n_mines": UserSettableParameter('slider', "Number of mines", 15, 5, 30, 1)})
+                           "Football game",
+                           {"n_players": UserSettableParameter('slider', "Number of players", 5, 3, 10, 1),
+                            "speed": UserSettableParameter('slider', "Speed", 50, 10, 200, 10)})
     server.port = 8521
     server.launch()
 

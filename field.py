@@ -34,15 +34,16 @@ class Field(Model):
             # "Indication markers": lambda model: len([m for m in model.markers if m.purpose == MarkerPurpose.INDICATION]),
         }, agent_reporters={})
 
-    def __init__(self, n_robots, n_obstacles, n_quicksand, n_mines, speed):
+    def __init__(self, n_players, speed):
+        width, height = 1300, 800
         Model.__init__(self)
-        self.space = mesa.space.ContinuousSpace(1600, 1000, False)
+        self.space = mesa.space.ContinuousSpace(width, height, False)
         self.steps = 0
+        self.ball = Ball(width/2, height/2)
         self.schedule = RandomActivation(self)
-        
-        self.schedule.add(Ball(1600//2, 1000//2))
-        for _ in range(n_robots): # Loop on teams
-            x, y = random.random() * 1600, random.random() * 1000
+
+        for _ in range(n_players):  # Loop on teams
+            x, y = random.random() * width, random.random() * height
             self.schedule.add(
                 Player(int(uuid.uuid1()), self, x, y, speed,
                       2 * speed, random.random() * 2 * math.pi))
