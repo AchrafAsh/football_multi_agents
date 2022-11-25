@@ -35,11 +35,10 @@ class Field(Model):
         }, agent_reporters={})
 
     def __init__(self, n_players, speed):
-        width, height = 800, 800
+        width, height = 600, 600
         Model.__init__(self)
         self.space = mesa.space.ContinuousSpace(width, height, False)
         self.steps = 0
-        self.ball = Ball(width/2, height/2)
         self.Goals = []
         self.schedule = RandomActivation(self)
 
@@ -52,16 +51,19 @@ class Field(Model):
             self.schedule.add(
                 Player(int(uuid.uuid1()), self, x, y, speed, 2, random.random() * 2 * math.pi))
 
-        self.Goals.append(Goal(0, height / 2 - 100))
-        self.Goals.append(Goal(0, height / 2 + 100))
-        self.Goals.append(Goal(width, height / 2 - 100))
-        self.Goals.append(Goal(width, height / 2 + 100))
+        self.ball = Ball(int(uuid.uuid1()), self, 300, 300, 0)
+        self.schedule.add(self.ball)
+
+        self.Goals.append(Goal(0, height / 2 - 50))
+        self.Goals.append(Goal(0, height / 2 + 50))
+        self.Goals.append(Goal(width, height / 2 - 50))
+        self.Goals.append(Goal(width, height / 2 + 50))
 
         self.datacollector = self.collector
 
     def step(self):
         self.datacollector.collect(self)
         self.schedule.step()
-        self.step += 1
-        if not self.step == 500:
+        self.steps += 1
+        if (self.ball.x == 0 and 250 < self.ball.y < 350) or (self.ball.x == 600 and 250 < self.ball.y < 350):
             self.running = False
