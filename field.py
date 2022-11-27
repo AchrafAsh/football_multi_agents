@@ -6,7 +6,7 @@ import mesa.space
 
 from mesa import Model
 from mesa.datacollection import DataCollector
-from mesa.time import RandomActivation
+from mesa.time import BaseScheduler
 
 from player import Player
 from ball import Ball
@@ -40,7 +40,7 @@ class Field(Model):
         self.space = mesa.space.ContinuousSpace(width, height, False)
         self.steps = 0
         self.Goals = []
-        self.schedule = RandomActivation(self)
+        self.schedule = BaseScheduler(self)
 
         for _ in range(n_players):  # Loop on teams
             x, y = random.random() * width / 2, random.random() * height

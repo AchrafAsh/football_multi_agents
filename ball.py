@@ -8,7 +8,7 @@ class Ball(mesa.Agent):
         self.x = x
         self.y = y
         self.speed = speed
-        self.free = True  # True if no one has the ball
+        self.player_with_the_ball = None  # True if no one has the ball
         self.angle = 0
 
     def portrayal_method(self):
@@ -20,9 +20,9 @@ class Ball(mesa.Agent):
         return portrayal
 
     def step(self):
-        if self.free:
+        if self.player_with_the_ball is None:
             self.x, self.y = move(self.x, self.y, self.speed, self.angle)
-            self.speed = max(self.speed - 10, 0)
+            self.speed = int(self.speed / 2)
             if self.x < 0:
                 self.x = 0
             if self.y < 0:
@@ -31,5 +31,8 @@ class Ball(mesa.Agent):
                 self.y = 600
             if self.x > 600:
                 self.x = 600
+        else:
+            self.speed = 0
+            self.x, self.y = self.player_with_the_ball.x, self.player_with_the_ball.y
 
 
