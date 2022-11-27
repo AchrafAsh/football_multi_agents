@@ -14,8 +14,8 @@ class Ball(mesa.Agent):
     def portrayal_method(self):
         portrayal = {"Shape": "circle",
                      "Filled": "true",
-                     "Layer": 2,
-                     "Color": "black",
+                     "Layer": 3,
+                     "Color": "green",
                      "r": 5}
         return portrayal
 

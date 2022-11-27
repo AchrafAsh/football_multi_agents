@@ -1,3 +1,4 @@
+import constants
 from collections import defaultdict
 from mesa.visualization.ModularVisualization import VisualizationElement, ModularServer, UserSettableParameter
 from mesa.visualization.modules import ChartModule
@@ -51,10 +52,10 @@ def run_single_server():
                           "Color": "Orange"}],
                         data_collector_name='datacollector')
     server = ModularServer(Field,
-                           [ContinuousCanvas(), chart],
+                           [ContinuousCanvas(constants.FIELD_SIZE, constants.FIELD_SIZE), chart],
                            "Football game",
-                           {"n_players": UserSettableParameter('slider', "Number of players", 5, 3, 10, 1),
-                            "speed": UserSettableParameter('slider', "Speed", 50, 10, 200, 10)})
+                           {"n_players": UserSettableParameter('slider', "Number of players", 7, 3, 11, 2),
+                            "speed": UserSettableParameter('slider', "Speed", 2, 2, 10, 2)})
     server.port = 8521
     server.launch()
 

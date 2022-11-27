@@ -3,7 +3,7 @@ import random
 import uuid
 import mesa
 import mesa.space
-
+import constants
 from mesa import Model
 from mesa.datacollection import DataCollector
 from mesa.time import BaseScheduler
@@ -22,7 +22,7 @@ class Goal:
                      "Filled": "true",
                      "Layer": 2,
                      "Color": "black",
-                     "r": 10}
+                     "r": 4}
         return portrayal
 
 
@@ -35,7 +35,7 @@ class Field(Model):
         }, agent_reporters={})
 
     def __init__(self, n_players, speed):
-        width, height = 600, 600
+        width, height = constants.FIELD_SIZE, constants.FIELD_SIZE
         Model.__init__(self)
         self.space = mesa.space.ContinuousSpace(width, height, False)
         self.steps = 0
@@ -51,7 +51,7 @@ class Field(Model):
             self.schedule.add(
                 Player(int(uuid.uuid1()), self, x, y, speed, 2, random.random() * 2 * math.pi))
 
-        self.ball = Ball(int(uuid.uuid1()), self, 300, 300, 0)
+        self.ball = Ball(int(uuid.uuid1()), self, constants.FIELD_SIZE//2, constants.FIELD_SIZE//2, 0)
         self.schedule.add(self.ball)
 
         self.Goals.append(Goal(0, height / 2 - 50))
