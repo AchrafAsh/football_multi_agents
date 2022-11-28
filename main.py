@@ -48,9 +48,10 @@ class ContinuousCanvas(VisualizationElement):
 
 
 def run_single_server():
-    chart = ChartModule([{"Label": "Shoots",
-                          "Color": "Orange"}],
-                        data_collector_name='datacollector')
+    chart = ChartModule([
+        {"Label": "Shots", "Color": "Orange"},
+        {"Label": "Passes", "Color": "Red"}
+        ], data_collector_name='datacollector')
     server = ModularServer(Field,
                            [ContinuousCanvas(constants.FIELD_SIZE, constants.FIELD_SIZE), chart],
                            "Football game",

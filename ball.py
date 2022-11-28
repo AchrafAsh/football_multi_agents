@@ -1,5 +1,5 @@
 import mesa
-from agent import MovingAgent
+import constants
 from utils import move
 
 class Ball(mesa.Agent):
@@ -23,14 +23,8 @@ class Ball(mesa.Agent):
         if self.player_with_the_ball is None:
             self.x, self.y = move(self.x, self.y, self.speed, self.angle)
             self.speed = int(self.speed / 2)
-            if self.x < 0:
-                self.x = 0
-            if self.y < 0:
-                self.y = 0
-            if self.y > 600:
-                self.y = 600
-            if self.x > 600:
-                self.x = 600
+            self.x = min(max(self.x, 0), constants.FIELD_SIZE)
+            self.y = min(max(self.y, 0), constants.FIELD_SIZE)
         else:
             self.speed = 0
             self.x, self.y = self.player_with_the_ball.x, self.player_with_the_ball.y
