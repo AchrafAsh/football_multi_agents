@@ -17,6 +17,7 @@ class Player(mesa.Agent):
         self.angle = angle
         self.counter = 0
         self.interception_zone = 10
+        self.sight_distance = 200
         self.skills = {
             'dribbling': 0,
             'defending': 0,
@@ -24,7 +25,45 @@ class Player(mesa.Agent):
             'intercepting': 0,
         }
 
-    def position_utility(self, x, y):
+    def new_utility(self, x, y):
+        score = 0
+        mode = 'defense' if self.model.ball.player_with_the_ball and self.model.ball.player_with_the_ball.team != self.team else 'attack'
+        for agent in self.model.schedule.agents:
+            if isinstance(agent, Ball):
+                score -= constants.DIST_JEU * abs(x - agent.x)
+                if self.model.ball.player_with_the_ball and self.model.ball.player_with_the_ball.team == self.team:
+                    if math.dist((x,y), (agent.x, agent.y)) < constants.SEUIL_DIST_BALL['attack']:
+                        score += constants.ALPHA[mode] * math.dist((x, y), (agent.x, agent.y))
+                elif self.model.ball.player_with_the_ball:
+                    if math.dist((x,y), (agent.x, agent.y)) < constants.SEUIL_DIST_BALL['defense']:
+                        score -= constants.ALPHA[mode] * math.dist((x, y), (agent.x, agent.y))
+
+            else:
+                if agent.team != self.team and math.dist((x, y), (agent.x, agent.y)) < self.sight_distance:
+                    if self.model.ball.player_with_the_ball and self.model.ball.player_with_the_ball.team == self.team:
+                        score += constants.GAMMA[mode] * math.dist((x, y), (agent.x, agent.y))
+                    elif self.model.ball.player_with_the_ball and self.model.ball.player_with_the_ball.team != self.team:
+                        score -= constants.GAMMA[mode] * math.dist((x, y), (agent.x, agent.y))
+
+                if agent.team == self.team and math.dist((x, y), (agent.x, agent.y)) < self.sight_distance:
+                    score += constants.DELTA[mode] * math.dist((x, y), (agent.x, agent.y))
+
+        # Distance au but
+        SEUIL_DIST_BUT = 50
+        if self.model.ball.player_with_the_ball is not None:
+            if self.model.ball.player_with_the_ball.team == self.team:
+                # Player is in offense but does not have the ball: run towards the other goal (x=0 or 600)
+                distance_to_goal = math.dist([x, y], [constants.FIELD_SIZE * (self.team%2), constants.FIELD_SIZE//2])
+                if distance_to_goal > SEUIL_DIST_BUT:
+                    score -= constants.ALPHA[mode] * distance_to_goal
+            elif self.model.ball.player_with_the_ball.team != self.team:
+                # Player is in defense: run towards their goal
+                distance_to_goal = math.dist([x, y], [constants.FIELD_SIZE * (self.team - 1), constants.FIELD_SIZE//2])
+                if distance_to_goal > SEUIL_DIST_BUT:
+                    score -= constants.ALPHA[mode] * distance_to_goal
+        return score
+
+    def old_utility(self, x, y):
         score = 100
         for agent in self.model.schedule.agents:
             if isinstance(agent, Ball):
@@ -43,6 +82,7 @@ class Player(mesa.Agent):
             score -= math.dist([x, y], [constants.FIELD_SIZE * (self.team - 1), constants.FIELD_SIZE//2])
         return score
 
+
     def step(self):
         self.counter = max(0, self.counter - 1)
         # If in range to shoot, shoot (to simple, may have to change later)
@@ -53,7 +93,7 @@ class Player(mesa.Agent):
                 return self.shot(0, 300)
 
         # If nobody has the ball
-        if self.model.ball.player_with_the_ball is None and math.dist((self.x, self.y), (self.model.ball.x, self.model.ball.y)) < 100:
+        if not self.model.ball.player_with_the_ball and math.dist((self.x, self.y), (self.model.ball.x, self.model.ball.y)) < 200:
             if math.dist((self.x, self.y), (self.model.ball.x, self.model.ball.y)) < self.interception_zone:
                 if random.random() * constants.BALL_SPEED > self.model.ball.speed:  # Max shoot speed is 100
                     self.model.ball.player_with_the_ball = self
@@ -62,13 +102,15 @@ class Player(mesa.Agent):
             return
 
         # The player is moving to the new position that increase his utility
-        max_utility = self.position_utility(self.x, self.y)
+        # utility = self.new_utility if self.team == 1 else self.old_utility
+        utility = self.old_utility
+        max_utility = utility(self.x, self.y)
         max_utility_x, max_utility_y, max_utility_angle = self.x, self.y, self.angle
         angle = self.angle
         for i in range(10):  # Try 10 different way to move, pick out the best one
             x, y = move(self.x, self.y, self.speed, angle)
-            if 0 < x < constants.FIELD_SIZE and 0 < y < constants.FIELD_SIZE and self.position_utility(x, y) > max_utility:
-                max_utility = self.position_utility(x, y)
+            if 0 < x < constants.FIELD_SIZE and 0 < y < constants.FIELD_SIZE and utility(x, y) > max_utility:
+                max_utility = utility(x, y)
                 max_utility_x, max_utility_y, max_utility_angle = x, y, angle
             angle = math.pi * random.random() * 2
         self.x, self.y, self.angle = max_utility_x, max_utility_y, max_utility_angle
@@ -84,9 +126,10 @@ class Player(mesa.Agent):
             ally_utility = []
             ally_position = []
             for player in self.model.schedule.agents:
+                
                 if isinstance(player, Player) and player.team == self.team and player is not self:
                     ally_position.append([player.x, player.y])
-                    ally_utility.append(self.position_utility(player.x, player.y))
+                    ally_utility.append(utility(player.x, player.y))
 
             if max(ally_utility) > max_utility:
                 # Pass the ball
