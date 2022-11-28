@@ -8,7 +8,7 @@ from field import Field
 
 class ContinuousCanvas(VisualizationElement):
     local_includes = [
-        "./js/simple_continuous_canvas.js",
+        "./js/football_field.js",
         "./js/jquery.js"
     ]
 
