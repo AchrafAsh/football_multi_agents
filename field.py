@@ -36,7 +36,9 @@ class Field(Model):
             # "Indication markers": lambda model: len([m for m in model.markers if m.purpose == MarkerPurpose.INDICATION]),
         }, agent_reporters={})
 
-    def __init__(self, n_players, speed):
+    def __init__(self, n_players, speed, distance_to_buts_weight_attack, distance_to_buts_weight_defense, distance_to_adversary_weight_attack,
+                 distance_to_adversary_weight_defense, distance_to_ball_weight_attack, distance_to_ball_weight_defense, 
+                 distance_to_teammate_weight):
         width, height = constants.FIELD_SIZE, constants.FIELD_SIZE
         Model.__init__(self)
         self.space = mesa.space.ContinuousSpace(width, height, False)
@@ -44,6 +46,13 @@ class Field(Model):
         self.shots = 0
         self.passes = 0
         self.Goals = []
+        self.distance_to_buts_weight_attack = distance_to_buts_weight_attack
+        self.distance_to_buts_weight_defense = distance_to_buts_weight_defense
+        self.distance_to_adversary_weight_attack = distance_to_adversary_weight_attack
+        self.distance_to_adversary_weight_defense = distance_to_adversary_weight_defense
+        self.distance_to_ball_weight_attack = distance_to_ball_weight_attack
+        self.distance_to_ball_weight_defense = distance_to_ball_weight_defense
+        self.distance_to_teammate_weight = distance_to_teammate_weight
         self.schedule = BaseScheduler(self)
 
         for _ in range(n_players):  # Loop on teams

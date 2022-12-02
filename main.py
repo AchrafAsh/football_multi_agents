@@ -56,7 +56,15 @@ def run_single_server():
                            [ContinuousCanvas(constants.FIELD_SIZE, constants.FIELD_SIZE), chart],
                            "Football game",
                            {"n_players": UserSettableParameter('slider', "Number of players", 7, 3, 11, 2),
-                            "speed": UserSettableParameter('slider', "Speed", 2, 2, 10, 2)})
+                            "speed": UserSettableParameter('slider', "Speed", 2, 2, 10, 2),
+                            "distance_to_buts_weight_attack": UserSettableParameter('slider', "Weight of but distance in attack mode", 10, 0, 20, 2),
+                            "distance_to_buts_weight_defense": UserSettableParameter('slider', "Weight of but distance in defense mode", 1, 0, 20 , 2),
+                            "distance_to_adversary_weight_attack": UserSettableParameter('slider', "Weight of adversaries distance in attack mode", 0.2, 0, 20, 2),
+                            "distance_to_adversary_weight_defense": UserSettableParameter('slider', "Weight of adversaries distance in defense mode", 0.8, 0, 20, 2),
+                            "distance_to_ball_weight_attack": UserSettableParameter('slider', "Weight of ball distance in attack mode", 0.2, 0, 20, 2),
+                            "distance_to_ball_weight_defense": UserSettableParameter('slider', "Weight of ball distance in defense mode", 0.8, 0, 20, 2),
+                            "distance_to_teammate_weight": UserSettableParameter('slider', "Weight of teammates distance", 0.5, 0, 20, 2)
+                            })
     server.port = 8521
     server.launch()
 
