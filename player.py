@@ -27,26 +27,25 @@ class Player(mesa.Agent):
 
     def new_utility(self, x, y):
         score = 0
-        mode = 'defense' if self.model.ball.player_with_the_ball and self.model.ball.player_with_the_ball.team != self.team else 'attack'
         for agent in self.model.schedule.agents:
             if isinstance(agent, Ball):
                 score -= constants.DIST_JEU * abs(x - agent.x)
                 if self.model.ball.player_with_the_ball and self.model.ball.player_with_the_ball.team == self.team:
                     if math.dist((x,y), (agent.x, agent.y)) < constants.SEUIL_DIST_BALL['attack']:
-                        score += constants.ALPHA[mode] * math.dist((x, y), (agent.x, agent.y))
+                        score += self.model.distance_to_ball_weight_attack * math.dist((x, y), (agent.x, agent.y))
                 elif self.model.ball.player_with_the_ball:
                     if math.dist((x,y), (agent.x, agent.y)) < constants.SEUIL_DIST_BALL['defense']:
-                        score -= constants.ALPHA[mode] * math.dist((x, y), (agent.x, agent.y))
+                        score -= self.model.distance_to_ball_weight_defense * math.dist((x, y), (agent.x, agent.y))
 
             else:
                 if agent.team != self.team and math.dist((x, y), (agent.x, agent.y)) < self.sight_distance:
                     if self.model.ball.player_with_the_ball and self.model.ball.player_with_the_ball.team == self.team:
-                        score += constants.GAMMA[mode] * math.dist((x, y), (agent.x, agent.y))
+                        score += self.model.distance_to_adversary_weight_attack * math.dist((x, y), (agent.x, agent.y))
                     elif self.model.ball.player_with_the_ball and self.model.ball.player_with_the_ball.team != self.team:
-                        score -= constants.GAMMA[mode] * math.dist((x, y), (agent.x, agent.y))
+                        score -= self.model.distance_to_adversary_weight_defense * math.dist((x, y), (agent.x, agent.y))
 
                 if agent.team == self.team and math.dist((x, y), (agent.x, agent.y)) < self.sight_distance:
-                    score += constants.DELTA[mode] * math.dist((x, y), (agent.x, agent.y))
+                    score += self.model.distance_to_teammate_weight * math.dist((x, y), (agent.x, agent.y))
 
         # Distance au but
         SEUIL_DIST_BUT = 50
@@ -55,12 +54,12 @@ class Player(mesa.Agent):
                 # Player is in offense but does not have the ball: run towards the other goal (x=0 or 600)
                 distance_to_goal = math.dist([x, y], [constants.FIELD_SIZE * (self.team%2), constants.FIELD_SIZE//2])
                 if distance_to_goal > SEUIL_DIST_BUT:
-                    score -= constants.ALPHA[mode] * distance_to_goal
+                    score -= self.model.distance_to_buts_weight_attack * distance_to_goal
             elif self.model.ball.player_with_the_ball.team != self.team:
                 # Player is in defense: run towards their goal
                 distance_to_goal = math.dist([x, y], [constants.FIELD_SIZE * (self.team - 1), constants.FIELD_SIZE//2])
                 if distance_to_goal > SEUIL_DIST_BUT:
-                    score -= constants.ALPHA[mode] * distance_to_goal
+                    score -= self.model.distance_to_buts_weight_defense * distance_to_goal
         return score
 
     def old_utility(self, x, y):
@@ -103,7 +102,7 @@ class Player(mesa.Agent):
 
         # The player is moving to the new position that increase his utility
         # utility = self.new_utility if self.team == 1 else self.old_utility
-        utility = self.old_utility
+        utility = self.new_utility
         max_utility = utility(self.x, self.y)
         max_utility_x, max_utility_y, max_utility_angle = self.x, self.y, self.angle
         angle = self.angle
