@@ -31,7 +31,7 @@ class Player(mesa.Agent):
             if isinstance(agent, Ball):
                 score -= constants.DIST_JEU * abs(x - agent.x)
                 if self.model.ball.player_with_the_ball and self.model.ball.player_with_the_ball.team == self.team:
-                    if math.dist((x,y), (agent.x, agent.y)) < constants.SEUIL_DIST_BALL['attack']:
+                    if 20 < math.dist((x,y), (agent.x, agent.y)) < constants.SEUIL_DIST_BALL['attack']:
                         score += self.model.distance_to_ball_weight_attack * math.dist((x, y), (agent.x, agent.y))
                 elif self.model.ball.player_with_the_ball:
                     if math.dist((x,y), (agent.x, agent.y)) < constants.SEUIL_DIST_BALL['defense']:
@@ -48,7 +48,7 @@ class Player(mesa.Agent):
                     score += self.model.distance_to_teammate_weight * math.dist((x, y), (agent.x, agent.y))
 
         # Distance au but
-        SEUIL_DIST_BUT = 50
+        SEUIL_DIST_BUT = 5
         if self.model.ball.player_with_the_ball is not None:
             if self.model.ball.player_with_the_ball.team == self.team:
                 # Player is in offense but does not have the ball: run towards the other goal (x=0 or 600)
@@ -63,15 +63,17 @@ class Player(mesa.Agent):
         return score
 
     def old_utility(self, x, y):
-        score = 100
+        score = 0
         for agent in self.model.schedule.agents:
             if isinstance(agent, Ball):
                 score -= 2*math.dist([x, y], [agent.x,agent.y])
-            elif agent == self and agent.team != self.team and math.dist([x, y], [agent.x, agent.y]) < 100:
-                coef = 2 if self.model.ball.player_with_the_ball.team == self.team else -2
-                score += (math.dist([x, y], [agent.x, agent.y]) - 100) * coef
+            elif self.model.ball.player_with_the_ball and agent.team != self.team and math.dist([x, y], [agent.x, agent.y]) < 100:
+                # Attackers should stay away from defenders | Defenders should stay close to attackers 
+                coef = 0.5 if self.model.ball.player_with_the_ball.team == self.team else -2
+                score += (math.dist([x, y], [agent.x, agent.y])-100)*coef
             elif agent.team == self.team and math.dist([x, y], [agent.x, agent.y]) < 100:
-                score += math.dist([x, y], [agent.x, agent.y]) - 100
+                # Teammates should stay away
+                score += (math.dist([x, y], [agent.x, agent.y])-100)
 
         if self.model.ball.player_with_the_ball is not None and self.model.ball.player_with_the_ball.team == self.team:
             # Player is in offense but does not have the ball: run towards the other goal (x=0 or 600)
@@ -86,9 +88,9 @@ class Player(mesa.Agent):
         self.counter = max(0, self.counter - 1)
         # If in range to shoot, shoot (to simple, may have to change later)
         if self.model.ball.player_with_the_ball == self:
-            if self.team == 1 and math.dist([self.x, self.y], [600, 300]) < 150:
-                return self.shot(600, 300)
-            elif self.team == 2 and math.dist([self.x, self.y], [0, 300]) < 150:
+            if self.team == 1 and math.dist([self.x, self.y], [constants.FIELD_SIZE, constants.FIELD_SIZE//2]) < 150:
+                return self.shot(constants.FIELD_SIZE, constants.FIELD_SIZE//2)
+            elif self.team == 2 and math.dist([self.x, self.y], [0, constants.FIELD_SIZE//2]) < 150:
                 return self.shot(0, 300)
 
         # If nobody has the ball
@@ -99,10 +101,17 @@ class Player(mesa.Agent):
                     self.counter = 3
             (self.x, self.y), self.angle = go_to(self.x, self.y, self.speed, self.model.ball.x, self.model.ball.y)
             return
+       
+        # If the player doesn't have the ball, he can intercept it or still it from a player from the other team
+        if math.dist([self.x, self.y], [self.model.ball.x, self.model.ball.y]) < self.interception_zone and \
+        self.model.ball.player_with_the_ball.team != self.team:
+            if random.random() > constants.STEAL_BALL_PROB:
+                self.model.ball.player_with_the_ball = self
 
         # The player is moving to the new position that increase his utility
         # utility = self.new_utility if self.team == 1 else self.old_utility
         utility = self.new_utility
+        # utility = self.old_utility
         max_utility = utility(self.x, self.y)
         max_utility_x, max_utility_y, max_utility_angle = self.x, self.y, self.angle
         angle = self.angle
@@ -113,12 +122,6 @@ class Player(mesa.Agent):
                 max_utility_x, max_utility_y, max_utility_angle = x, y, angle
             angle = math.pi * random.random() * 2
         self.x, self.y, self.angle = max_utility_x, max_utility_y, max_utility_angle
-
-        # If the player doesn't have the ball, he can intercept it or still it from a player from the other team
-        if math.dist([self.x, self.y], [self.model.ball.x, self.model.ball.y]) < self.interception_zone and \
-        self.model.ball.player_with_the_ball.team != self.team:
-            if random.random() > constants.STEAL_BALL_PROB:
-                self.model.ball.player_with_the_ball = self
         
         # If the player has the ball, he can make a pass according to the utility of his teammates
         if self.model.ball.player_with_the_ball == self:
@@ -130,15 +133,21 @@ class Player(mesa.Agent):
                     ally_position.append([player.x, player.y])
                     ally_utility.append(utility(player.x, player.y))
 
-            if max(ally_utility) > max_utility:
+            if max(ally_utility) > max_utility + 10:
                 # Pass the ball
+                
+                # Reporters
+                if self.model.ball.player_with_the_ball.team == 1:
+                    self.model.passes_1 += 1
+                if self.model.ball.player_with_the_ball.team == 2:
+                    self.model.passes_2 += 1
+                
                 self.model.ball.player_with_the_ball = None
                 i = ally_utility.index(max(ally_utility))
                 self.model.ball.speed = min(constants.BALL_SPEED,
                     int(math.dist([self.x, self.y],[ally_position[i][0], ally_position[i][1]])//2 + 10))
                 self.model.ball.angle = math.atan2(self.y - ally_position[i][1],
                                                    self.x - ally_position[i][0]) + math.pi
-                self.model.passes += 1    
 
     def shot(self, x, y):
         self.model.ball.player_with_the_ball = None
