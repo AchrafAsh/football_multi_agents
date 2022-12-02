@@ -31,9 +31,10 @@ class Field(Model):
     collector = DataCollector(
         model_reporters={
             "Shots": lambda model: model.shots,
-            "Passes": lambda model: model.passes,
-            # "Danger markers": lambda model: len([m for m in model.markers if m.purpose == MarkerPurpose.DANGER]),
-            # "Indication markers": lambda model: len([m for m in model.markers if m.purpose == MarkerPurpose.INDICATION]),
+            "Passes Team 1": lambda model: model.passes_1,
+            "Passes Team 2": lambda model: model.passes_2,
+            "Possession Team 1": lambda model: model.possession_1,
+            "Possession Team 2": lambda model: model.possession_2,
         }, agent_reporters={})
 
     def __init__(self, n_players, speed, distance_to_buts_weight_attack, distance_to_buts_weight_defense, distance_to_adversary_weight_attack,
@@ -44,15 +45,18 @@ class Field(Model):
         self.space = mesa.space.ContinuousSpace(width, height, False)
         self.steps = 0
         self.shots = 0
-        self.passes = 0
+        self.passes_1 = 0
+        self.passes_2 = 0
+        self.possession_1 = 0
+        self.possession_2 = 0
         self.Goals = []
         self.distance_to_buts_weight_attack = distance_to_buts_weight_attack
         self.distance_to_buts_weight_defense = distance_to_buts_weight_defense
-        self.distance_to_adversary_weight_attack = distance_to_adversary_weight_attack
-        self.distance_to_adversary_weight_defense = distance_to_adversary_weight_defense
+        self.distance_to_adversary_weight_attack = distance_to_adversary_weight_attack/n_players
+        self.distance_to_adversary_weight_defense = distance_to_adversary_weight_defense/n_players
         self.distance_to_ball_weight_attack = distance_to_ball_weight_attack
         self.distance_to_ball_weight_defense = distance_to_ball_weight_defense
-        self.distance_to_teammate_weight = distance_to_teammate_weight
+        self.distance_to_teammate_weight = distance_to_teammate_weight/n_players
         self.schedule = BaseScheduler(self)
 
         for _ in range(n_players):  # Loop on teams
@@ -84,3 +88,7 @@ class Field(Model):
         if (self.ball.x == 0 and (constants.FIELD_SIZE-constants.GOAL_SIZE)//2 < self.ball.y < (constants.GOAL_SIZE + constants.FIELD_SIZE)//2) \
             or (self.ball.x == constants.FIELD_SIZE and (constants.FIELD_SIZE - constants.GOAL_SIZE)//2 < self.ball.y < (constants.GOAL_SIZE + constants.FIELD_SIZE)//2):
             self.running = False
+            
+            print('%-12s%-12s%-12s' % ('Team', 'Possession', 'Passes'))
+            print('%-12s%-12i%-12i' % ('1', self.possession_1, self.passes_1))
+            print('%-12s%-12i%-12i' % ('2', self.possession_2, self.passes_2))

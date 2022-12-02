@@ -28,5 +28,10 @@ class Ball(mesa.Agent):
         else:
             self.speed = 0
             self.x, self.y = self.player_with_the_ball.x, self.player_with_the_ball.y
+            # Reporters
+            if self.player_with_the_ball.team == 1:
+                self.model.possession_1 += 1
+            if self.player_with_the_ball.team == 2:
+                self.model.possession_2 += 1
 
 

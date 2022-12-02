@@ -68,14 +68,19 @@ class GoalKeeper(mesa.Agent):
                 if isinstance(player, Player) and player.team == self.team and player is not self:
                     ally_position.append([player.x, player.y])
                     ally_utility.append(self.player_utility(player.x, player.y))
-
+            
+            # Reporters
+            if self.model.ball.player_with_the_ball.team == 1:
+                self.model.passes_1 += 1
+            if self.model.ball.player_with_the_ball.team == 2:
+                self.model.passes_2 += 1
+            
             self.model.ball.player_with_the_ball = None
             i = ally_utility.index(max(ally_utility))
             self.model.ball.speed = min(constants.BALL_SPEED, int(math.dist([self.x, self.y],
                                                             [ally_position[i][0], ally_position[i][1]]) + 10))
             self.model.ball.angle = math.atan2(self.y - ally_position[i][1],
                                                 self.x - ally_position[i][0]) + math.pi
-            self.model.passes += 1
 
 
     def portrayal_method(self):
